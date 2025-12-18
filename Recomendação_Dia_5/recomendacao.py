@@ -1,204 +1,141 @@
 import pandas as pd
+import numpy as np
 import joblib
 
+adsfadf
+
 def recomendacao(usuario):
+    modelo_recomendacao, df_filmes, df_avaliacao = prepara_modelo()
 
-    cluster_0, cluster_1, colunas, colunas_v, modelo_kmeans, df_avaliacoes, df_filmes, filme_copia = prepara_modelo()
+    # Prepara os filmes para a classificação com relação ao usuário
+    filmes = df_filmes.reset_index().copy()
+    filmes = filmes.drop(['rating', 'age', 'gender'], axis=1)
 
-    usuario_copia = usuario.copy()
-
-    usuario = prepara_usuario(usuario, df_filmes, colunas, colunas_v)
-
-    colunas_filmes = usuario[colunas_v]
-    colunas_filmes.columns = colunas
-
-    cluster_usuario = modelo_kmeans.predict(usuario)
-
-    if cluster_usuario == 0:
-        possiveis_filmes = colunas_filmes.multiply(cluster_0).round(2)
-    else:
-        possiveis_filmes = colunas_filmes.multiply(cluster_1).round(2)
-
-    possiveis_filmes = pd.DataFrame(possiveis_filmes, columns=colunas)
-    possiveis_filmes = possiveis_filmes.T.sort_values(by=0, ascending=False).head(3).T
-    possiveis_filmes = possiveis_filmes.columns
-
-    for i in range(3):
-
-        filme = df_filmes[df_filmes[possiveis_filmes[i]] != 0].reset_index(drop=True)
-
-        if i == 0:
-            filmes = filme
-        else:
-            filmes = pd.concat([filmes, filme], axis=0)
-
-    filmes = filmes.drop_duplicates().reset_index(drop=True)
-    filmes = melhores_filmes(filmes, usuario, usuario_copia, possiveis_filmes, df_avaliacoes, filme_copia, colunas)
-
-    return filmes
-
-
-
-def prepara_usuario(usuario, df_filmes, colunas, colunas_v):
-    filmes_avalicao = df_filmes.copy()
-
-    usuario = pd.merge(usuario, filmes_avalicao, on='item id')
-    usuario = usuario.drop(['item id','movie title'], axis=1)
-
-    quantidade_total = usuario.groupby('user id').sum()[colunas]
-
-    for i in range(4,23):
-        usuario.iloc[:, i] = usuario.iloc[:, i] * usuario.iloc[:, 1]
-        
-    usuario = usuario.drop('rating', axis=1)
+    # # Faz a predicao dos clusteres de cada filme avaliado e agrupa no DataFrame do usuário
+    # usuario = df_usuario[df_usuario['user id'] == id_usuario].copy()
+    # usuario = pd.merge(usuario, filmes, on='item id')
+    # usuario = usuario.drop(['user id', 'occupation'], axis=1)
     
-    avaliacao_total = usuario.groupby('user id').sum()[colunas]
+    clusteres = modelo_recomendacao.predict(usuario.drop(['item id'], axis=1))
+    usuario['cluster'] = clusteres
 
-    media_avaliacao = avaliacao_total.div(quantidade_total).round(2)
-    media_avaliacao = media_avaliacao.fillna(0)
+    # Pega os melhores clusteres mais bem avaliados com base na quantidade e soma dos mais
+    # bem avaliados filmes feitos pelo usuário com base na multiplicação deles
+    melhor_cluster = usuario.drop(['age','gender', 'item id'], axis=1).copy()
+    mais_assistidos = melhor_cluster[['cluster']].groupby('cluster').value_counts()
+    melhor_cluster = melhor_cluster.groupby('cluster').sum()
+    melhor_cluster['rating'] = melhor_cluster['rating'] * mais_assistidos
 
-    quantidade_total.columns = colunas_v
+    # Preparação do próximo passo
+    df_avaliacao['item id'] = df_filmes.index
 
-    media_avaliacao = pd.concat([media_avaliacao, quantidade_total], axis=1).reset_index().drop('user id', axis=1)
+    # Procura o cluster com pelo menos 5 filmes potenciais para recomendar ao usuário
+    for incremento in melhor_cluster.sort_values('rating', ascending=False).index:
+        # Pega o index dos melhores clusteres na ordem decrescente, pega o melhor filme e
+        # por último pega o DataFrame e o índice dos filmes mais próximos
+        cluster_index = melhor_cluster.sort_values('rating', ascending=False).index[incremento]
 
-    usuario = usuario.drop(columns=colunas)
-    usuario = usuario.replace({'M': 1, 'F': 0})
-    usuario = usuario.groupby('user id').mean().reset_index().drop('user id', axis=1)
-    usuario = pd.concat([usuario, media_avaliacao], axis=1)
-    usuario = usuario.drop(['age','unknown'], axis=1)
+        id_melhor_filme = melhor_filme_cluster(cluster_index, usuario, df_filmes)
+        filmes_cluster, top_filmes = mais_proximos(df_avaliacao, cluster_index, id_melhor_filme)
 
-    return usuario
+        # Se o usário ja viu o filme retira do DataFrame de filmes e se o DataFrame
+        # tem 5 ou mais elementos, retorna os 5 filmes mais próximos
+        for x in top_filmes:
+            if x in usuario['item id']:
+                 filmes_cluster = filmes_cluster[filmes_cluster['item id'] != x]
+                 
+        if len(filmes_cluster >= 5):
+            break
+
+    return filmes_cluster['item id'].head()
 
 
 
-def melhores_filmes(filmes, usuario, usuario_copia, generos, df_avaliacoes, filme_copia, colunas):
-    filmes_usuario = filmes[['item id']]
 
-    filmes_avaliados = filme_copia.copy()
-    avaliacoes = df_avaliacoes.copy()
+def mais_proximos(df_avaliacao, cluster_index, id_filme):
+    # Pega os filmes do cluster especifico retirando o filme que faremos a medicao e adiciona a coluna distancia
+    filmes_cluster = df_avaliacao[df_avaliacao['cluster'] == cluster_index].copy()
+    filmes_cluster = filmes_cluster[filmes_cluster["item id"] != id_filme]
+    filmes_cluster = filmes_cluster.reset_index(drop=True)
+    filmes_cluster['distancia'] = 0
 
-    filmes_avaliados = pd.merge(avaliacoes, filmes_avaliados, on='item id')
-    filmes_avaliados = pd.merge(filmes_avaliados, filmes_usuario, on='item id')
+    for linha in range(len(filmes_cluster['item id'])):
+        # Pega o filme que faremos a medicao
+        filme = df_avaliacao[df_avaliacao['item id'] == id_filme].copy()
+        filme = filme.reset_index(drop=True)
 
-    quantidade = filmes_avaliados[['item id','movie title']].value_counts().to_frame()
-    quantidade = quantidade.sort_values(by='item id').reset_index()
+        # Calcula a distancia euclidiana do nosso filme com o restante
+        valor = []
+        for coluna in filme.columns:
+            if coluna not in ['item id', 'cluster', 'distancia']:
+                valor.append(pow(filme.loc[0, coluna] - filmes_cluster.loc[linha, coluna], 2))
 
-    avaliacoes = filmes_avaliados.groupby(['item id', 'movie title']).sum()[['rating']].reset_index()
+        filmes_cluster.loc[linha, 'distancia'] = np.sqrt(np.sum(valor))
     
-    media_total = avaliacoes.iloc[:, 2].div(quantidade.iloc[:, 2]).round(2)
+    # Devolve os filmes em ordem crescente do mais proximos em ids
+    filmes_cluster = filmes_cluster.sort_values('distancia').reset_index(drop=True)
+    top_filmes = []
+    for linha in range(len(filmes_cluster['item id'])):
+        top_filmes.append(filmes_cluster.loc[linha, 'item id'])
 
-    avaliacoes = avaliacoes.drop('rating', axis=1)
-    avaliacoes['rating_medio'] = media_total
-    avaliacoes['total_avaliado'] = quantidade.iloc[:, 2]
+    return filmes_cluster, top_filmes
 
-    filmes_avaliados = filme_copia.copy()
-    filmes_avaliados = filmes_avaliados.drop(['movie title', 'unknown'], axis=1)
 
-    avaliacoes = pd.merge(avaliacoes, filmes_avaliados, on='item id')
 
-    for i in range(len(avaliacoes['rating_medio'])):
-        if avaliacoes.loc[i, generos[0]] != 0:
-            avaliacoes.iloc[i, 2] = avaliacoes.iloc[i, 2] * usuario[f'v_{generos[0]}']
-            avaliacoes.iloc[i, 3] = avaliacoes.iloc[i, 3] * usuario[generos[0]]
 
-        elif avaliacoes.loc[i, generos[1]] != 0:
-            avaliacoes.iloc[i, 2] = avaliacoes.iloc[i, 2] * usuario[f'v_{generos[1]}']
-            avaliacoes.iloc[i, 3] = avaliacoes.iloc[i, 3] * usuario[generos[1]]
+def melhor_filme_cluster(cluster_index, usuario, df_filmes):
+    # Separa o usuário com base no cluster escolhido
+    usuario_modificado = usuario[usuario['cluster'] == cluster_index].copy()
 
-        else:
-            avaliacoes.iloc[i, 2] = avaliacoes.iloc[i, 2] * usuario[f'v_{generos[2]}']
-            avaliacoes.iloc[i, 3] = avaliacoes.iloc[i, 3] * usuario[generos[2]]
+    # Preparação para escolher o melhor filme
+    somatorio = usuario_modificado.drop(['age','item id', 'gender'], axis=1).copy()
+    somatorio['resultado'] = 0
 
-    avaliacoes['total'] = avaliacoes['rating_medio'] + avaliacoes['total_avaliado']
-    avaliacoes = avaliacoes.drop(columns=colunas).drop(columns=['rating_medio','total_avaliado'])
-    avaliacoes = avaliacoes.sort_values('total', ascending=False).reset_index(drop=True)
+    for linha in range(len(somatorio['rating'])):
+        # Pega o id de cada filme e multiplica a coluna das avaliações
+        # com base na média geral do filme
+        id_filme = usuario_modificado.iloc[linha]['item id']
+        somatorio.iloc[linha]['rating'] *= df_filmes.loc[id_filme, 'rating']
 
-    
-    filmes_vistos = usuario_copia['item id']
-    filmes_vistos = filmes_vistos.to_frame()
+        # Soma todas as colunas de devolve o resultado
+        somatorio.iloc[linha]['resultado'] = np.sum(somatorio.iloc[linha])
 
-    avaliacoes = avaliacoes[~avaliacoes['item id'].isin(filmes_vistos['item id'])]
-    avaliacoes = avaliacoes.drop(['item id', 'total'], axis=1).reset_index(drop=True)
+    # Implementa o resultado no DataFrame do usuário e escolhe o id do melhor filme
+    # com base no maior resultado
+    usuario_modificado['resultado'] = somatorio['resultado']
+    id_melhor_filme = usuario_modificado.sort_values('resultado', ascending=False).iloc[0]['item id']
 
-    filmes = avaliacoes.head(5)
-
-    return filmes
+    return id_melhor_filme
 
 #Preparatórios para as funções
 #==========================================================================================================================================================
 
 def prepara_modelo():
-    df_filmes = pd.read_csv('H:\\GitHub\Python\\7DaysOfCode\\Ciência de Dados\\DS_Dia_4\\u.item', sep='|', names=['item id', 'movie title', 'release date', 'video release date',
-                    'IMDb URL', 'unknown', 'Action', 'Adventure', 'Animation', 'Childrens', 'Comedy', 'Crime', 'Documentary', 
-                    'Drama', 'Fantasy', 'Film-Noir', 'Horror', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western'],
-                    encoding='ISO-8859-1')
+    df_filmes = pd.read_csv('../DS_Dia_4/u.item', sep='|', names=['movie id', 'movie title', 'release date', 'video release date',
+                 'IMDb URL', 'unknown', 'Action', 'Adventure', 'Animation', 'Childrens', 'Comedy', 'Crime', 'Documentary', 
+                 'Drama', 'Fantasy', 'Film-Noir', 'Horror', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western'],
+                 encoding='UTF-8')
+    df_filmes = df_filmes.drop('movie title', axis=1).copy()
 
-    df_filmes = df_filmes.drop(columns=['release date', 'video release date', 'IMDb URL'])
+    df_usuarios = pd.read_csv('../DS_Dia_4/u.user', sep='|', names=['user id', 'age', 'gender', 'occupation', 'zip code'], encoding='ISO-8859-1')
+    df_usuarios = df_usuarios.drop(['zip code', 'occupation'], axis=1)
 
-    df_usuarios = pd.read_csv('H:\\GitHub\Python\\7DaysOfCode\\Ciência de Dados\\DS_Dia_4\\u.user', sep='|', names=['user id', 'age', 'gender', 'occupation', 'zip code'], encoding='ISO-8859-1')
-    df_usuarios = df_usuarios.drop(['zip code','occupation'], axis=1)
-
-    df_avaliacoes = pd.read_csv('H:\\GitHub\Python\\7DaysOfCode\\Ciência de Dados\\DS_Dia_4\\u.data', sep='\t', names=['user id', 'item id', 'rating', 'timestamp'], encoding='ISO-8859-1')
-    df_avaliacoes = df_avaliacoes.drop('timestamp', axis=1)
+    df_avaliacoes = pd.read_csv('../DS_Dia_4/u.data', sep='\t', names=['user id', 'item id', 'rating', 'timestamp'], encoding='ISO-8859-1')
 
     df_user_aval = pd.merge(df_avaliacoes, df_usuarios, on='user id')
     df_user_aval['gender'] = df_user_aval['gender'].replace({'M': 1, 'F': 0})
 
-    filme_copia = df_filmes.copy()
+    df_filmes_final = df_filmes_final.rename(columns={'movie id': 'item id'})
+
     df_treino = df_user_aval.copy()
-    df_treino = pd.merge(df_treino, filme_copia, on='item id')
-    df_treino = df_treino.drop(['item id','movie title'], axis=1)
+    df_treino = pd.merge(df_treino, df_filmes_final, on='item id')
+    df_treino = df_treino.drop(['user id', 'occupation',], axis=1)
+    df_treino = df_treino.groupby('item id').mean()
 
-    df_quantidade_filmes = df_treino.groupby('user id').sum()[['unknown', 'Action',
-        'Adventure', 'Animation', 'Childrens', 'Comedy', 'Crime', 'Documentary',
-        'Drama', 'Fantasy', 'Film-Noir', 'Horror', 'Musical', 'Mystery',
-        'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western']]
+    modelo_recomendacao = joblib.load('modelo_recomendacao.pkl')
+    
+    df_treino_final = modelo_recomendacao[:-1].transform(df_treino)
+    df_treino_final = pd.DataFrame(data=df_treino_final, columns=modelo_recomendacao.feature_names_in_['pca'].get_feature_names_out())
+    df_treino_final['cluster'] = modelo_recomendacao.feature_names_in_['kmeans'].labels_
 
-    for i in range(4,23):
-        df_treino.iloc[:, i] = df_treino.iloc[:,i]*df_treino.iloc[:, 1]
-
-    df_treino = df_treino.drop('rating', axis=1)
-
-    quantidade_filmes = df_treino.groupby('user id').sum()
-    quantidade_filmes = quantidade_filmes.drop(['age', 'gender'], axis=1)
-
-    quantidade_filmes = quantidade_filmes.div(df_quantidade_filmes).round(2)
-    quantidade_filmes = quantidade_filmes.fillna(0)
-
-    df_quantidade_filmes.columns = ['v_unknown', 'v_Action',
-        'v_Adventure', 'v_Animation', 'v_Childrens', 'v_Comedy', 'v_Crime', 'v_Documentary',
-        'v_Drama', 'v_Fantasy', 'v_Film-Noir', 'v_Horror', 'v_Musical', 'v_Mystery',
-        'v_Romance', 'v_Sci-Fi', 'v_Thriller', 'v_War', 'v_Western']
-
-    quantidade_filmes = pd.concat([quantidade_filmes, df_quantidade_filmes], axis=1)
-
-    df_treino = df_treino.drop(['unknown', 'Action',
-                                'Adventure', 'Animation', 'Childrens', 'Comedy', 'Crime', 'Documentary',
-                                'Drama', 'Fantasy', 'Film-Noir', 'Horror', 'Musical', 'Mystery',
-                                'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western'], axis=1)
-
-    df_treino = df_treino.groupby('user id').mean()
-
-    df_treino = pd.concat([df_treino, quantidade_filmes], axis=1)
-
-    modelo_kmeans = joblib.load('modelo_kmeans.pkl')
-
-    df_treino['cluster'] = modelo_kmeans.labels_
-
-    cluster_media = df_treino.groupby('cluster').mean()
-
-    colunas = ['Action', 'Adventure', 'Animation', 'Childrens', 'Comedy',
-        'Crime', 'Documentary', 'Drama', 'Fantasy', 'Film-Noir', 'Horror',
-        'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western']
-
-    colunas_v = ['v_Action', 'v_Adventure', 'v_Animation', 'v_Childrens', 'v_Comedy',
-        'v_Crime', 'v_Documentary', 'v_Drama', 'v_Fantasy', 'v_Film-Noir', 'v_Horror',
-        'v_Musical', 'v_Mystery', 'v_Romance', 'v_Sci-Fi', 'v_Thriller', 'v_War', 'v_Western']
-
-    cluster_0 = cluster_media.query('index == 0')[colunas]
-    cluster_1 = cluster_media.query('index == 1')[colunas]
-
-    cluster_0 = cluster_0.reset_index().drop('cluster', axis=1)
-    cluster_1 = cluster_1.reset_index().drop('cluster', axis=1)
-
-    return cluster_0, cluster_1, colunas, colunas_v, modelo_kmeans, df_avaliacoes, df_filmes, filme_copia
+    return modelo_recomendacao, df_treino, df_treino_final

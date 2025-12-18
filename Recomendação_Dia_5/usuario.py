@@ -14,6 +14,8 @@ usuario.drop('avaliacao', axis=1, inplace=True)
 
 usuario = usuario[['id', 'filmeId', 'nota', 'idade', 'genero']]
 
+usuario['genero'] = usuario['genero'].replace({'M': 1, 'F': 0})
+
 colunas = ['user id', 'item id', 'rating', 'age', 'gender']
 
 usuario.columns = colunas
@@ -21,4 +23,4 @@ usuario.columns = colunas
 filmes = recomendacao(usuario)
 
 print(filmes)
-
+adsfasdf
