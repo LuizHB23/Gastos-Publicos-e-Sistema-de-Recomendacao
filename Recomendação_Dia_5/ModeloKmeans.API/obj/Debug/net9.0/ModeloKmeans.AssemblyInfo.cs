@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ModeloKmeans")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b36c3fda4053b16390e9a5c8bfe3752bd8428c9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9b560c843c56ebefa1743bf6b7a1085371d7ac01")]
 [assembly: System.Reflection.AssemblyProductAttribute("ModeloKmeans")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ModeloKmeans")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

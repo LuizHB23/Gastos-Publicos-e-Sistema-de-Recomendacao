@@ -529,11 +529,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "h:\\GitHub\\Python\\7DaysOfCode\\Ciência de Dados\\Recomendação_Dia_5\\ModeloKmeans.API\\ModeloKmeans.csproj",
+      "projectUniqueName": "H:\\GitHub\\Python\\7DaysOfCode\\Ciência de Dados\\Recomendação_Dia_5\\ModeloKmeans.API\\ModeloKmeans.csproj",
       "projectName": "ModeloKmeans",
-      "projectPath": "h:\\GitHub\\Python\\7DaysOfCode\\Ciência de Dados\\Recomendação_Dia_5\\ModeloKmeans.API\\ModeloKmeans.csproj",
+      "projectPath": "H:\\GitHub\\Python\\7DaysOfCode\\Ciência de Dados\\Recomendação_Dia_5\\ModeloKmeans.API\\ModeloKmeans.csproj",
       "packagesPath": "C:\\Users\\luizh\\.nuget\\packages\\",
-      "outputPath": "h:\\GitHub\\Python\\7DaysOfCode\\Ciência de Dados\\Recomendação_Dia_5\\ModeloKmeans.API\\obj\\",
+      "outputPath": "H:\\GitHub\\Python\\7DaysOfCode\\Ciência de Dados\\Recomendação_Dia_5\\ModeloKmeans.API\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\luizh\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -606,7 +606,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.307/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

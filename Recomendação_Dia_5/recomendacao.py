@@ -1,21 +1,20 @@
 import pandas as pd
 import numpy as np
 import joblib
+import warnings
 
-adsfadf
+warnings.simplefilter(action='ignore', category=FutureWarning)
+pd.options.mode.chained_assignment = None
 
 def recomendacao(usuario):
-    modelo_recomendacao, df_filmes, df_avaliacao = prepara_modelo()
+    modelo_recomendacao, df_filmes, df_avaliacao, filmes_previstos = prepara_modelo()
 
     # Prepara os filmes para a classificação com relação ao usuário
     filmes = df_filmes.reset_index().copy()
     filmes = filmes.drop(['rating', 'age', 'gender'], axis=1)
 
-    # # Faz a predicao dos clusteres de cada filme avaliado e agrupa no DataFrame do usuário
-    # usuario = df_usuario[df_usuario['user id'] == id_usuario].copy()
-    # usuario = pd.merge(usuario, filmes, on='item id')
-    # usuario = usuario.drop(['user id', 'occupation'], axis=1)
-    
+    usuario = pd.merge(usuario, filmes, on='item id')
+    usuario = usuario.drop(['user id'], axis=1)
     clusteres = modelo_recomendacao.predict(usuario.drop(['item id'], axis=1))
     usuario['cluster'] = clusteres
 
@@ -30,7 +29,7 @@ def recomendacao(usuario):
     df_avaliacao['item id'] = df_filmes.index
 
     # Procura o cluster com pelo menos 5 filmes potenciais para recomendar ao usuário
-    for incremento in melhor_cluster.sort_values('rating', ascending=False).index:
+    for incremento, _ in enumerate(melhor_cluster.sort_values('rating', ascending=False).index):
         # Pega o index dos melhores clusteres na ordem decrescente, pega o melhor filme e
         # por último pega o DataFrame e o índice dos filmes mais próximos
         cluster_index = melhor_cluster.sort_values('rating', ascending=False).index[incremento]
@@ -47,7 +46,9 @@ def recomendacao(usuario):
         if len(filmes_cluster >= 5):
             break
 
-    return filmes_cluster['item id'].head()
+    filmes_previstos = filmes_previstos[filmes_previstos['movie id'].isin(filmes_cluster['item id'].head())]
+
+    return filmes_previstos
 
 
 
@@ -111,31 +112,39 @@ def melhor_filme_cluster(cluster_index, usuario, df_filmes):
 #==========================================================================================================================================================
 
 def prepara_modelo():
+    # Prepara o DataFrame dos filmes
     df_filmes = pd.read_csv('../DS_Dia_4/u.item', sep='|', names=['movie id', 'movie title', 'release date', 'video release date',
                  'IMDb URL', 'unknown', 'Action', 'Adventure', 'Animation', 'Childrens', 'Comedy', 'Crime', 'Documentary', 
                  'Drama', 'Fantasy', 'Film-Noir', 'Horror', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western'],
                  encoding='UTF-8')
-    df_filmes = df_filmes.drop('movie title', axis=1).copy()
+    df_filmes_final = df_filmes.drop(['movie title', 'release date', 'video release date', 'IMDb URL'], axis=1).copy()
+    df_filmes_final = df_filmes_final.rename(columns={'movie id': 'item id'})
 
+    # Prepara o DataFrame dos usuários
     df_usuarios = pd.read_csv('../DS_Dia_4/u.user', sep='|', names=['user id', 'age', 'gender', 'occupation', 'zip code'], encoding='ISO-8859-1')
     df_usuarios = df_usuarios.drop(['zip code', 'occupation'], axis=1)
 
+    # Prepara o DataFrame das avaliações
     df_avaliacoes = pd.read_csv('../DS_Dia_4/u.data', sep='\t', names=['user id', 'item id', 'rating', 'timestamp'], encoding='ISO-8859-1')
+    df_avaliacoes = df_avaliacoes.drop('timestamp', axis=1)
 
+    # Junta os DataFrames do usuario com o das avaliações
     df_user_aval = pd.merge(df_avaliacoes, df_usuarios, on='user id')
     df_user_aval['gender'] = df_user_aval['gender'].replace({'M': 1, 'F': 0})
 
-    df_filmes_final = df_filmes_final.rename(columns={'movie id': 'item id'})
-
+    # Prepara o DataFrames para treino
     df_treino = df_user_aval.copy()
     df_treino = pd.merge(df_treino, df_filmes_final, on='item id')
-    df_treino = df_treino.drop(['user id', 'occupation',], axis=1)
+    df_treino = df_treino.drop(['user id'], axis=1)
     df_treino = df_treino.groupby('item id').mean()
 
+    # Importa o modelo
     modelo_recomendacao = joblib.load('modelo_recomendacao.pkl')
-    
-    df_treino_final = modelo_recomendacao[:-1].transform(df_treino)
-    df_treino_final = pd.DataFrame(data=df_treino_final, columns=modelo_recomendacao.feature_names_in_['pca'].get_feature_names_out())
-    df_treino_final['cluster'] = modelo_recomendacao.feature_names_in_['kmeans'].labels_
 
-    return modelo_recomendacao, df_treino, df_treino_final
+    # Prepara o DataFrame baseado nos passos do modelo antes do KMeans e 
+    # junta com suas predições
+    df_treino_final = modelo_recomendacao[:-1].transform(df_treino)
+    df_treino_final = pd.DataFrame(data=df_treino_final, columns=modelo_recomendacao.named_steps['pca'].get_feature_names_out()) 
+    df_treino_final['cluster'] = modelo_recomendacao.named_steps['kmeans'].labels_
+
+    return modelo_recomendacao, df_treino, df_treino_final, df_filmes

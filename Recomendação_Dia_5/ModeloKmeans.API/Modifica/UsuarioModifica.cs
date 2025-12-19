@@ -1,11 +1,12 @@
+using System.Collections;
+
 namespace ModeloKmeans.Modifica;
 
 internal static class UsuarioModifica
 {
-
     public static Dictionary<int, List<string>> LeArquivoUsuario()
     {
-        using (StreamReader sr = new StreamReader("H:\\GitHub\\Python\\7DaysOfCode\\Ciência de Dados\\DS_Dia_4\\u.user"))
+        using (StreamReader sr = new StreamReader(@"..\..\DS_Dia_4\u.user"))
         {
             List<string> textoLista = new();
             string? usuarioDado;
@@ -36,9 +37,9 @@ internal static class UsuarioModifica
         }
     }
 
-    public static List<string> LeArquivoFilme() 
+    public static List<string> LeArquivoAvaliacoes() 
     {
-        using (StreamReader sr = new StreamReader("H:\\GitHub\\Python\\7DaysOfCode\\Ciência de Dados\\DS_Dia_4\\u.data"))
+        using (StreamReader sr = new StreamReader(@"H:..\..\DS_Dia_4\u.data"))
         {
             List<string> texto = new();
             string? usuarioDado;
@@ -50,5 +51,37 @@ internal static class UsuarioModifica
 
             return texto;
         }
+    }
+
+    private static List<string> LeArquivoFilmes() 
+    {
+        using (StreamReader sr = new StreamReader(@"H:..\..\DS_Dia_4\u.item"))
+        {
+            List<string> texto = new();
+            string? usuarioDado;
+
+            while ((usuarioDado = sr.ReadLine()) is not null)
+            {
+                texto.Add(usuarioDado);
+            }
+
+            return texto;
+        }
+    }
+
+    public static List<int> TodosFilmesRegistrados()
+    {
+        List<string> textoLista = LeArquivoFilmes();
+        List<int> registrosFilmes = new();
+
+            foreach (var texto in textoLista)
+            {
+                string[] partesFilmes = texto.Replace("|", ",").Trim().Split(',');
+
+                int id = int.Parse(partesFilmes[0]);
+                registrosFilmes.Add(id);
+            }
+            
+        return registrosFilmes;
     }
 }

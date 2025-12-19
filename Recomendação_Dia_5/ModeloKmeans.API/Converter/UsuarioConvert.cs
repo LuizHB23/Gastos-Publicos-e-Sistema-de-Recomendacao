@@ -6,9 +6,15 @@ namespace ModeloKmeans.Converter;
 
 internal static class UsuarioConvert
 {
-
     private static Usuario CriaUsuario(UsuarioRequest request)
     {
+        List<int> registroFilmes = UsuarioModifica.TodosFilmesRegistrados();
+
+        if (!registroFilmes.Contains(request.Id))
+        {    
+            return null;
+        }
+
         var lista = new List<Avaliacao>
         {
             new Avaliacao(request.FilmeId, request.Nota)
@@ -17,17 +23,19 @@ internal static class UsuarioConvert
         return new Usuario(request.Id, lista, request.Idade, request.Genero);
     }
 
-    public static Usuario ConverteRequestToUsuario(UsuarioRequest request)
+    public static Usuario ConverteRequestToUsuario(UsuarioRequest request) => CriaUsuario(request);
+
+    public static Usuario? ConverteRequestToUsuario(AvaliacaoRequest request)
     {
         var usuario = JsonModifica.DescerializaJson(request.Id);
 
         if (usuario is not null)
         {
-            var filme = usuario.Avaliacao.FirstOrDefault(filme => filme.FilmeId == request.FilmeId);
-            
-            if (filme is not null)
-            {
-                return usuario;
+            List<int> registroFilmes = UsuarioModifica.TodosFilmesRegistrados();
+
+            if (!registroFilmes.Contains(request.Id))
+            {    
+                return null;
             }
 
             List<Avaliacao> listaAvaliacoes = usuario.Avaliacao.ToList();
@@ -41,7 +49,7 @@ internal static class UsuarioConvert
             return usuario;
         }
 
-        return CriaUsuario(request);
+        return null;
     }
 
     public static void ConstroiArquivoJson(List<string> usuariosFilmesTexto,  Dictionary<int, List<string>> usuariosDict)

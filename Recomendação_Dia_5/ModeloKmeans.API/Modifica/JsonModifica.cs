@@ -7,11 +7,8 @@ namespace ModeloKmeans.Modifica;
 
 internal static class JsonModifica
 {
-    private static string caminhoUsuarioData = @"H:\GitHub\Python\7DaysOfCode\Ciência de Dados\Recomendação_Dia_5\usuarios_data.json";
+    private static readonly string caminhoUsuarioData = @"..\usuarios_data.json";
     private static List<Usuario>? listaUsuario = LeArquivoJson(caminhoUsuarioData);
-
-    //private static string caminhoUsuario= @"H:\GitHub\Python\7DaysOfCode\Ciência de Dados\Recomendação_Dia_5\usuarios.json";
-    //private static List<Usuario>? listaUsuario = LeArquivo(@"H:\GitHub\Python\7DaysOfCode\Ciência de Dados\Recomendação_Dia_5\usuarios.json");
 
     private static List<Usuario>? LeArquivoJson(string caminho)
     {
@@ -74,7 +71,7 @@ internal static class JsonModifica
         }
 
 
-        using (StreamWriter sw = new StreamWriter(@"H:\GitHub\Python\7DaysOfCode\Ciência de Dados\Recomendação_Dia_5\usuarios_data.json"))
+        using (StreamWriter sw = new StreamWriter(caminhoUsuarioData))
         {
             var texto = JsonSerializer.Serialize(listaUsuario);
             sw.Write(texto);
@@ -83,7 +80,7 @@ internal static class JsonModifica
 
     public static void EscreveArquivoJson(List<Usuario> listaUsuarios)
     {
-        using (StreamWriter sw = new StreamWriter(@"H:\GitHub\Python\7DaysOfCode\Ciência de Dados\Recomendação_Dia_5\usuarios_data.json"))
+        using (StreamWriter sw = new StreamWriter(caminhoUsuarioData))
         {
             var texto = JsonSerializer.Serialize(listaUsuarios);
             sw.Write(texto);
