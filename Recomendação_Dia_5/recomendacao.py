@@ -7,10 +7,10 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 pd.options.mode.chained_assignment = None
 
 def recomendacao(usuario):
-    modelo_recomendacao, df_filmes, df_avaliacao, filmes_previstos = prepara_modelo()
+    modelo_recomendacao, df_filmes_avaliacao, df_avaliacao_modelo, df_filmes = prepara_modelo()
 
     # Prepara os filmes para a classificação com relação ao usuário
-    filmes = df_filmes.reset_index().copy()
+    filmes = df_filmes_avaliacao.reset_index().copy()
     filmes = filmes.drop(['rating', 'age', 'gender'], axis=1)
 
     usuario = pd.merge(usuario, filmes, on='item id')
@@ -26,7 +26,7 @@ def recomendacao(usuario):
     melhor_cluster['rating'] = melhor_cluster['rating'] * mais_assistidos
 
     # Preparação do próximo passo
-    df_avaliacao['item id'] = df_filmes.index
+    df_avaliacao_modelo['item id'] = df_filmes_avaliacao.index
 
     # Procura o cluster com pelo menos 5 filmes potenciais para recomendar ao usuário
     for incremento, _ in enumerate(melhor_cluster.sort_values('rating', ascending=False).index):
@@ -34,8 +34,8 @@ def recomendacao(usuario):
         # por último pega o DataFrame e o índice dos filmes mais próximos
         cluster_index = melhor_cluster.sort_values('rating', ascending=False).index[incremento]
 
-        id_melhor_filme = melhor_filme_cluster(cluster_index, usuario, df_filmes)
-        filmes_cluster, top_filmes = mais_proximos(df_avaliacao, cluster_index, id_melhor_filme)
+        id_melhor_filme = melhor_filme_cluster(cluster_index, usuario, df_filmes_avaliacao)
+        filmes_cluster, top_filmes = mais_proximos(df_avaliacao_modelo, cluster_index, id_melhor_filme)
 
         # Se o usário ja viu o filme retira do DataFrame de filmes e se o DataFrame
         # tem 5 ou mais elementos, retorna os 5 filmes mais próximos
@@ -46,23 +46,23 @@ def recomendacao(usuario):
         if len(filmes_cluster >= 5):
             break
 
-    filmes_previstos = filmes_previstos[filmes_previstos['movie id'].isin(filmes_cluster['item id'].head())]
+    df_filmes = df_filmes[df_filmes['movie id'].isin(filmes_cluster['item id'].head())]
 
-    return filmes_previstos
-
-
+    return df_filmes
 
 
-def mais_proximos(df_avaliacao, cluster_index, id_filme):
+
+
+def mais_proximos(df_avaliacao_modelo, cluster_index, id_filme):
     # Pega os filmes do cluster especifico retirando o filme que faremos a medicao e adiciona a coluna distancia
-    filmes_cluster = df_avaliacao[df_avaliacao['cluster'] == cluster_index].copy()
+    filmes_cluster = df_avaliacao_modelo[df_avaliacao_modelo['cluster'] == cluster_index].copy()
     filmes_cluster = filmes_cluster[filmes_cluster["item id"] != id_filme]
     filmes_cluster = filmes_cluster.reset_index(drop=True)
     filmes_cluster['distancia'] = 0
 
     for linha in range(len(filmes_cluster['item id'])):
         # Pega o filme que faremos a medicao
-        filme = df_avaliacao[df_avaliacao['item id'] == id_filme].copy()
+        filme = df_avaliacao_modelo[df_avaliacao_modelo['item id'] == id_filme].copy()
         filme = filme.reset_index(drop=True)
 
         # Calcula a distancia euclidiana do nosso filme com o restante
@@ -84,7 +84,7 @@ def mais_proximos(df_avaliacao, cluster_index, id_filme):
 
 
 
-def melhor_filme_cluster(cluster_index, usuario, df_filmes):
+def melhor_filme_cluster(cluster_index, usuario, df_filmes_avaliacao):
     # Separa o usuário com base no cluster escolhido
     usuario_modificado = usuario[usuario['cluster'] == cluster_index].copy()
 
@@ -96,7 +96,7 @@ def melhor_filme_cluster(cluster_index, usuario, df_filmes):
         # Pega o id de cada filme e multiplica a coluna das avaliações
         # com base na média geral do filme
         id_filme = usuario_modificado.iloc[linha]['item id']
-        somatorio.iloc[linha]['rating'] *= df_filmes.loc[id_filme, 'rating']
+        somatorio.iloc[linha]['rating'] *= df_filmes_avaliacao.loc[id_filme, 'rating']
 
         # Soma todas as colunas de devolve o resultado
         somatorio.iloc[linha]['resultado'] = np.sum(somatorio.iloc[linha])
@@ -133,18 +133,18 @@ def prepara_modelo():
     df_user_aval['gender'] = df_user_aval['gender'].replace({'M': 1, 'F': 0})
 
     # Prepara o DataFrames para treino
-    df_treino = df_user_aval.copy()
-    df_treino = pd.merge(df_treino, df_filmes_final, on='item id')
-    df_treino = df_treino.drop(['user id'], axis=1)
-    df_treino = df_treino.groupby('item id').mean()
+    df_filmes_avaliacao = df_user_aval.copy()
+    df_filmes_avaliacao = pd.merge(df_filmes_avaliacao, df_filmes_final, on='item id')
+    df_filmes_avaliacao = df_filmes_avaliacao.drop(['user id'], axis=1)
+    df_filmes_avaliacao = df_filmes_avaliacao.groupby('item id').mean()
 
     # Importa o modelo
     modelo_recomendacao = joblib.load('modelo_recomendacao.pkl')
 
     # Prepara o DataFrame baseado nos passos do modelo antes do KMeans e 
     # junta com suas predições
-    df_treino_final = modelo_recomendacao[:-1].transform(df_treino)
-    df_treino_final = pd.DataFrame(data=df_treino_final, columns=modelo_recomendacao.named_steps['pca'].get_feature_names_out()) 
-    df_treino_final['cluster'] = modelo_recomendacao.named_steps['kmeans'].labels_
+    df_avaliacao_modelo = modelo_recomendacao[:-1].transform(df_filmes_avaliacao)
+    df_avaliacao_modelo = pd.DataFrame(data=df_avaliacao_modelo, columns=modelo_recomendacao.named_steps['pca'].get_feature_names_out()) 
+    df_avaliacao_modelo['cluster'] = modelo_recomendacao.named_steps['kmeans'].labels_
 
-    return modelo_recomendacao, df_treino, df_treino_final, df_filmes
+    return modelo_recomendacao, df_filmes_avaliacao, df_avaliacao_modelo, df_filmes
