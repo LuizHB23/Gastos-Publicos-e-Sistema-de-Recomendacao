@@ -58,11 +58,11 @@ internal static class UsuarioModifica
         using (StreamReader sr = new StreamReader(@"H:..\..\DS_Dia_4\u.item"))
         {
             List<string> texto = new();
-            string? usuarioDado;
+            string? filmeDado;
 
-            while ((usuarioDado = sr.ReadLine()) is not null)
+            while ((filmeDado = sr.ReadLine()) is not null)
             {
-                texto.Add(usuarioDado);
+                texto.Add(filmeDado);
             }
 
             return texto;
