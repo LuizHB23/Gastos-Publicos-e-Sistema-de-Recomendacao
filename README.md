@@ -1,69 +1,71 @@
-🚀 Desafio 6 Dias de Ciência de Dados
-Este repositório contém a resolução de um desafio intensivo de 6 dias, cobrindo todo o pipeline de dados: desde a limpeza e análise exploratória até à construção de modelos de Machine Learning, integração via API e testes estatísticos.
+Com certeza. Aqui está o conteúdo do README.md formatado em Markdown, pronto para ser copiado e colado no seu repositório do GitHub.
 
-📋 Estrutura do Projeto
-O desafio foi dividido em duas grandes temáticas: Análise de Gastos Públicos (Senado Federal) e Sistemas de Recomendação de Filmes (MovieLens).
+Markdown
 
-Parte 1: Análise e Previsão (Dias 1 a 3)
-Focada em dados reais do portal CEAPS (Cota para Exercício da Atividade Parlamentar dos Senadores).
+# 🚀 Desafio: 6 Dias de Ciência de Dados
 
-Dia 1: ETL & Data Cleaning
+Este repositório contém a resolução de um desafio intensivo de 6 dias, abrangendo desde a limpeza e análise de dados públicos até a implementação de modelos de Machine Learning com integração em sistemas externos e validação estatística.
 
-Tratamento de dados de 2008 a 2022.
+---
 
-Limpeza de valores nulos, correção de tipos de dados e formatação de valores monetários.
+## 📅 Estrutura do Desafio
 
-Dia 2: Análise Exploratória de Dados (EDA)
+O projeto foi dividido em duas grandes temáticas, utilizando datasets distintos para explorar diferentes facetas da Ciência de Dados.
 
-Investigação de padrões de gastos por senador, estado e tipo de despesa.
+### **Parte 1: Análise de Gastos Públicos (Dias 1 a 3)**
+Focada nos dados do portal **CEAPS** (Cota para Exercício da Atividade Parlamentar dos Senadores), cobrindo o período de 2008 a 2022.
 
-Visualização de dados com Matplotlib e Seaborn.
+* **Dia 1 - ETL e Tratamento de Dados:** * Consolidação de múltiplos arquivos CSV.
+    * Limpeza de valores nulos e tratamento de strings.
+    * Conversão de tipos (Datas e Valores Monetários corrigidos para `float`).
+* **Dia 2 - Análise Exploratória (EDA):** * Identificação dos senadores e partidos com maiores gastos.
+    * Análise temporal de despesas ao longo dos anos.
+    * Visualização de dados com Seaborn e Matplotlib.
+* **Dia 3 - Previsão de Séries Temporais:** * Implementação do algoritmo **Prophet** (Facebook) para prever gastos futuros.
+    * Avaliação de performance com métricas de erro (MAE).
 
-Dia 3: Time Series Forecasting
+### **Parte 2: Sistema de Recomendação e Produção (Dias 4 a 6)**
+Utilização do dataset **MovieLens** para criar uma experiência personalizada de sugestão de filmes.
 
-Implementação do algoritmo Prophet para prever gastos futuros.
+* **Dia 4 - Machine Learning (Clusterização):** * Processamento de dados com `StandardScaler` e Redução de Dimensionalidade com `PCA`.
+    * Treinamento de modelo **K-Means** para segmentação de filmes.
+    * Criação de motor de recomendação baseado em distância euclidiana.
+* **Dia 5 - Engenharia e Integração (API):** * Desenvolvimento de uma infraestrutura em **C# (.NET)** para gerir utilizadores e avaliações.
+    * Scripts de integração em **Python** (`usuario.py` e `recomendacao.py`) para consumir a API e gerar recomendações em tempo real.
+* **Dia 6 - Teste A/B e Validação Estatística:** * Simulação de performance do modelo vs. site original.
+    * Cálculo de **Z-score**, **P-valor** e intervalos de confiança.
+    * Conclusão baseada em evidências estatísticas sobre a eficácia da recomendação nas conversões de vendas.
 
-Análise de erros (MAE) e tendências sazonais.
+---
 
-Parte 2: Recomendação e Produção (Dias 4 a 6)
-Focada no dataset MovieLens para criar uma experiência personalizada.
+## 🛠️ Tecnologias e Ferramentas
 
-Dia 4: Sistema de Recomendação
+* **Linguagens:** Python 3.x, C# (Backend)
+* **Bibliotecas de Dados:** Pandas, NumPy, Scikit-Learn, Prophet.
+* **Visualização:** Matplotlib, Seaborn.
+* **Integração:** .NET Minimal APIs, Requests, JSON Serialization, Joblib.
 
-Construção de um modelo de clusterização utilizando K-Means.
+---
 
-Redução de dimensionalidade com PCA e normalização com StandardScaler.
+## 📂 Arquivos no Repositório
 
-Criação de uma função de recomendação baseada em distância euclidiana.
+| Arquivo | Descrição |
+| :--- | :--- |
+| `dia_1_dia_3.ipynb` | Notebook com ETL, EDA e Previsão de Gastos (Senado). |
+| `dia_4.ipynb` | Notebook com a construção do modelo K-Means (MovieLens). |
+| `Dia_6.ipynb` | Análise estatística e Teste A/B do modelo. |
+| `recomendacao.py` | Lógica de predição e recomendação em Python. |
+| `usuario.py` | Script cliente para interagir com a API e o modelo. |
+| `*.cs` | Código fonte em C# para a API de gestão de utilizadores e dados. |
 
-Dia 5: Integração & API (Deploy Simulado)
+---
 
-Desenvolvimento de uma infraestrutura de backend para consumir o modelo.
+## 💡 Como Executar
 
-Arquivos em C# (.NET) para gestão de usuários e avaliações (RecomendacaoExtensions.cs, JsonModifica.cs).
+1.  **Modelos:** Execute os notebooks para gerar o arquivo `modelo_recomendacao.pkl`.
+2.  **API:** Inicie o serviço .NET para disponibilizar os endpoints de utilizadores.
+3.  **Client:** Execute o `usuario.py` para inserir um ID de utilizador e receber as 5 recomendações de filmes.
 
-Scripts de integração em Python (usuario.py, recomendacao.py) para conectar o modelo à API.
+---
 
-Dia 6: Teste A/B e Validação Estatística
-
-Simulação de um teste A/B para validar a eficácia do modelo de recomendação.
-
-Cálculo de Z-score, P-valor e intervalos de confiança para tomada de decisão baseada em dados.
-
-🛠️ Tecnologias Utilizadas
-Linguagens: Python, C#
-
-Data Science: Pandas, NumPy, Scikit-Learn, Prophet.
-
-Visualização: Matplotlib, Seaborn.
-
-Engenharia/Backend: .NET Core (Minimal APIs), JSON Serialization, Requests.
-
-Estatística: Testes de hipótese (A/B Testing).
-
-📈 Resultados
-Previsão de Gastos: Identificação de tendências de aumento com margem de erro mapeada.
-
-Recomendação: Sistema capaz de sugerir 5 filmes semelhantes baseados no perfil de clusterização do usuário.
-
-Validação: No teste A/B realizado no Dia 6, a análise estatística permitiu concluir se o novo modelo de recomendação trouxe impacto real nas conversões de vendas.
+**Projeto desenvolvido como parte de um desafio prático de Ciência de Dados.**
