@@ -1,7 +1,3 @@
-Com certeza. Aqui está o conteúdo do README.md formatado em Markdown, pronto para ser copiado e colado no seu repositório do GitHub.
-
-Markdown
-
 # 🚀 Desafio: 6 Dias de Ciência de Dados
 
 Este repositório contém a resolução de um desafio intensivo de 6 dias, abrangendo desde a limpeza e análise de dados públicos até a implementação de modelos de Machine Learning com integração em sistemas externos e validação estatística.
@@ -69,3 +65,4 @@ Utilização do dataset **MovieLens** para criar uma experiência personalizada 
 ---
 
 **Projeto desenvolvido como parte de um desafio prático de Ciência de Dados.**
+
