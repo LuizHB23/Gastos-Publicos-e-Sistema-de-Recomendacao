@@ -36,7 +36,7 @@ Utilização do dataset **MovieLens** para criar uma experiência personalizada 
 
 ## 🛠️ Tecnologias e Ferramentas
 
-* **Linguagens:** Python 3.x, C# (Backend)
+* **Linguagens:** Python 3.x, C# (Backend), .NET 9.0.
 * **Bibliotecas de Dados:** Pandas, NumPy, Scikit-Learn, Prophet.
 * **Visualização:** Matplotlib, Seaborn.
 * **Integração:** .NET Minimal APIs, Requests, JSON Serialization, Joblib.
@@ -58,6 +58,8 @@ Utilização do dataset **MovieLens** para criar uma experiência personalizada 
 
 ## 💡 Como Executar
 
+Os arquivos foram pensados para serem portáteis, portanto é possível reproduzir com um clone.
+
 1.  **Modelos:** Execute os notebooks para gerar o arquivo `modelo_recomendacao.pkl`.
 2.  **API:** Inicie o serviço .NET para disponibilizar os endpoints de utilizadores.
 3.  **Client:** Execute o `usuario.py` para inserir um ID de utilizador e receber as 5 recomendações de filmes.
@@ -65,4 +67,5 @@ Utilização do dataset **MovieLens** para criar uma experiência personalizada 
 ---
 
 **Projeto desenvolvido como parte de um desafio prático de Ciência de Dados.**
+
 
