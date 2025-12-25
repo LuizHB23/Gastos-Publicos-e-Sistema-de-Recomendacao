@@ -39,7 +39,7 @@ internal static class UsuarioModifica
 
     public static List<string> LeArquivoAvaliacoes() 
     {
-        using (StreamReader sr = new StreamReader(@"H:..\..\DS_Dia_4\u.data"))
+        using (StreamReader sr = new StreamReader(@"..\..\DS_Dia_4\u.data"))
         {
             List<string> texto = new();
             string? usuarioDado;
@@ -55,7 +55,7 @@ internal static class UsuarioModifica
 
     private static List<string> LeArquivoFilmes() 
     {
-        using (StreamReader sr = new StreamReader(@"H:..\..\DS_Dia_4\u.item"))
+        using (StreamReader sr = new StreamReader(@"..\..\DS_Dia_4\u.item"))
         {
             List<string> texto = new();
             string? filmeDado;
