@@ -58,7 +58,7 @@ Utilização do dataset **MovieLens** para criar uma experiência personalizada 
 
 ## 💡 Como Executar
 
-Os arquivos foram pensados para serem portáteis, portanto é possível reproduzir com um clone.
+Os arquivos foram pensados para serem portáteis, portanto é possível reproduzí-los com um clone.
 
 1.  **Modelos:** Execute os notebooks para gerar o arquivo `modelo_recomendacao.pkl`.
 2.  **API:** Inicie o serviço .NET para disponibilizar os endpoints de utilizadores.
@@ -67,5 +67,6 @@ Os arquivos foram pensados para serem portáteis, portanto é possível reproduz
 ---
 
 **Projeto desenvolvido como parte de um desafio prático de Ciência de Dados.**
+
 
 
